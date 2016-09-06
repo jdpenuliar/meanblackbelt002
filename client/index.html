@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html ng-app="myApp">
+<head>
+	<title>haha</title>
+	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.5/angular.min.js"></script>
+	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.5/angular-route.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.0/angular-messages.js"></script>
+	<script>
+		var myAppModule = angular.module("myApp",["ngRoute","ngMessages"]);
+		myAppModule.config(function($routeProvider){
+			$routeProvider
+			.when("/",{
+				templateUrl: "partials/landing.html"
+			})
+			.when("/bids",{
+				templateUrl: "partials/bids.html"
+			})
+			.when("/products",{
+				templateUrl: "partials/products.html"
+			})
+			.otherwise({
+				redirectTo: "/"
+			});
+		});
+		myAppModule.factory("usersFactory",function($http){
+			var factory = {};
+			var activeUser = {};
+			factory.index = function(callback){
+				$http.get("/users").then(function(data){
+					activeUser = data;
+					callback(activeUser);
+				});
+			}
+			factory.findOne = function(info,callback){
+				$http.post("/users/check",info).then(function(data){
+					activeUser = data;
+					callback(activeUser);
+				});
+			}
+			factory.create = function(info,callback){
+				$http.post("users").then(function(data){
+					activeUser = data;
+					callback(activeUser);
+				});
+			}
+			factory.getActiveUser = function(callback){
+				callback(activeUser);
+			}
+			return factory;
+		});
+		myAppModule.factory("productsFactory",function($http){
+			var factory = {};
+			var products = {};
+			factory.index = function(callback){
+				$http.get("/products").then(function(data){
+					products = data;
+					callback(products);
+				});
+			}
+			factory.create = function(info,callback){
+				$http.post("/products",info).then(function(data){
+					products = data;
+					callback(products);
+				});
+			}
+			return factory;
+		});
+		myAppModule.factory("bidsFactory",function($http){
+			var factory = {}
+			factory.create = function(info,callback){
+				$http.post("/bids",info).then(function(data){
+					callback(data);
+				});
+			};
+			return factory;
+		});
+		myAppModule.controller("LandingController",function($scope,$routeParams,$location,usersFactory){
+			$scope.test = "ahaha"
+			$scope.activeUser = {}
+			if(Object.keys($routeParams).length !== 0 && Object.keys($scope.activeUser).length !== 0){
+				$location.url("/bids")
+			}else{
+				$location.url("/");
+
+			}
+			$scope.addNewUser = function(){
+				usersFactory.findOne($scope.user,function(data){
+					$scope.activeUser = data;
+					if(Object.keys($scope.activeUser).length !== 0){
+						$location.url("/bids")
+					}else{
+						$location.url("/");
+
+					}
+				});
+			}
+		});
+		myAppModule.controller("BidsController",function($scope,usersFactory,$location,productsFactory,bidsFactory){
+			usersFactory.getActiveUser(function(data){
+				$scope.activeUser = data;
+				if(Object.keys($scope.activeUser).length === 0){
+					$location.url("/")
+				}
+			});
+			productsFactory.index(function(data){
+				$scope.products = data;
+			});
+			$scope.addNewBid = function(productID){
+				$scope.newBid.bider = $scope.activeUser;
+				$scope.newBid.productId = productID;
+				bidsFactory.create($scope.newBid,function(data){
+					productsFactory.index(function(data){
+						$scope.products = data;
+					});
+				});
+			}
+		});
+		myAppModule.controller("ProductsController",function($scope,productsFactory){
+			$scope.products = {};
+			productsFactory.index(function(data){
+				$scope.products = data;
+			});
+			$scope.addNewProduct = function(){
+				productsFactory.create($scope.newProduct,function(data){
+					$scope.products = data;
+				});
+			};
+		});
+	</script>
+</head>
+<body>
+	<div ng-view="">
+		
+	</div>
+</body>
+</html>

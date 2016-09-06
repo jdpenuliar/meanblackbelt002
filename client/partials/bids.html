@@ -1,0 +1,11 @@
+<div ng-controller="BidsController">
+<br>
+<br>
+	<div ng-model="products">
+		<p ng-repeat="product in products.data">{{product}}</p>
+	</div>
+	<form>
+		<label>Bid: <input type="text" name="bid" ng-model="newBid.bid"></label>
+		<button ng-click="addNewBid(products.data[0]._id)">Submit</button>
+	</form>
+</div>
